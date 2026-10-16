@@ -1,0 +1,483 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080d1b">
+<title>Smart Future Rewards</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+ --bg:#080d1b;--panel:#101a2d;--panel2:#15223a;
+ --line:#293b5b;--cyan:#53e8ff;--blue:#6085ff;
+ --purple:#b17cff;--green:#49efae;--text:#f4f7ff;
+ --muted:#91a2c2;--red:#ff7897;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+ min-height:100vh;color:var(--text);
+ background:radial-gradient(ellipse at 5% 0%,#15385c,transparent 38%),
+ radial-gradient(ellipse at 100% 40%,#2a194c,transparent 38%),var(--bg);
+ font-family:system-ui,-apple-system,sans-serif;
+}
+button,input{font:inherit}
+button{cursor:pointer;transition:.22s ease}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.app{width:100%;max-width:480px;margin:auto;padding:18px 15px 40px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{
+ width:44px;height:44px;display:grid;place-items:center;
+ border:1px solid #53e8ff88;border-radius:15px;
+ background:linear-gradient(145deg,#153b57,#211b48);
+ box-shadow:0 0 25px #53e8ff20;font-size:25px;color:var(--cyan)
+}
+.brand h1{font-size:15px;letter-spacing:1px}
+.brand p{font-size:9px;letter-spacing:2.5px;color:var(--cyan);margin-top:4px}
+.card{
+ padding:19px;margin-bottom:15px;border-radius:21px;
+ border:1px solid var(--line);
+ background:linear-gradient(145deg,#14223aee,#0e1729f5);
+ box-shadow:0 14px 36px #0002;
+}
+.hero{
+ position:relative;overflow:hidden;padding:23px;margin-bottom:16px;
+ border:1px solid #70e8ff55;border-radius:25px;
+ background:linear-gradient(130deg,#114b70,#29346b 60%,#46265f);
+}
+.hero:after{
+ content:"";position:absolute;width:150px;height:150px;right:-65px;top:-60px;
+ border:1px solid #ffffff33;border-radius:50%;
+ box-shadow:0 0 0 20px #ffffff09,0 0 0 42px #ffffff06;
+ pointer-events:none;
+}
+.eyebrow{font-size:10px;letter-spacing:2px;color:#b8eaff}
+.balance{font-size:39px;font-weight:850;letter-spacing:-1px;margin:12px 0 3px}
+.balance small{font-size:20px}
+.inr{font-size:12px;color:#d2e8ff}
+.hero-bottom{display:flex;justify-content:space-between;gap:12px;margin-top:24px}
+.mini-label{font-size:10px;color:#c6d9ff}
+.mini-value{font-size:13px;font-weight:750;margin-top:5px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.section-title{font-size:15px;font-weight:800}
+.section-sub{font-size:11px;line-height:1.7;color:var(--muted);margin-top:5px}
+.tag{font-size:9px;letter-spacing:.5px;color:var(--cyan);border:1px solid #53e8ff66;padding:7px 9px;border-radius:30px;white-space:nowrap}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat{padding:16px;border:1px solid var(--line);border-radius:18px;background:#101a2d}
+.stat-icon{font-size:20px}
+.stat-number{font-size:25px;font-weight:850;margin-top:9px}
+.stat-label{font-size:10px;color:var(--muted);margin-top:3px}
+.progress{height:6px;background:#25334d;border-radius:20px;overflow:hidden;margin:18px 0 9px}
+.progress div{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .5s}
+.progress-row{display:flex;justify-content:space-between;gap:10px;font-size:10px;color:var(--muted)}
+.btn{
+ border:1px solid #53e8ff99;border-radius:13px;padding:12px 15px;
+ background:#10263c;color:var(--cyan);font-size:12px;font-weight:800;
+ box-shadow:0 0 0 transparent;
+}
+.btn:hover{filter:brightness(1.2);box-shadow:0 0 20px #53e8ff20}
+.btn-primary{
+ color:#071325;border-color:#a1f6ff;
+ background:linear-gradient(110deg,#39d9ed,#6085ff);
+ box-shadow:0 6px 23px #39d9ed24;
+}
+.btn-full{width:100%;padding:14px}
+.logout{padding:9px 12px;color:var(--red);border-color:#ff789766;font-size:10px}
+.field{
+ width:100%;padding:13px 14px;margin-top:12px;
+ border:1px solid #344662;border-radius:12px;
+ background:#091222;color:white;outline:none;font-size:13px;
+}
+.field:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #53e8ff12}
+.field::placeholder{color:#7487a7}
+.captcha-wrap{display:flex;justify-content:center;margin:19px 0 5px}
+canvas{width:100%;max-width:280px;height:auto;border:1px solid #344e75;border-radius:12px}
+.refresh{display:block;margin:7px auto 9px;background:none;border:0;color:var(--cyan);font-size:11px;padding:8px}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.notice{display:none;padding:12px;border-radius:11px;font-size:11px;line-height:1.6;margin-top:12px;overflow-wrap:anywhere}
+.success{display:block;color:#73ffbf;background:#0e382c;border:1px solid #22694f}
+.error{display:block;color:#ff9bae;background:#421b2a;border:1px solid #763347}
+.timer{display:none;text-align:center;color:#ffdb86;font-size:11px;margin-top:12px}
+.history-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #24334b}
+.history-item:last-child{border-bottom:0}
+.history-item p{font-size:12px;font-weight:750}
+.history-item small{display:block;font-size:10px;color:var(--muted);margin-top:4px}
+.amount{font-size:12px;font-weight:800;text-align:right}
+.pending{color:#ffd17b}.paid{color:var(--green)}.rejected{color:var(--red)}
+.empty{text-align:center;color:var(--muted);font-size:11px;padding:18px 0}
+#authScreen{padding-top:38px}
+.auth-art{text-align:center;margin-bottom:25px}
+.orb{
+ width:105px;height:105px;margin:0 auto 22px;display:grid;place-items:center;
+ border-radius:32px;border:1px solid #56dcff88;font-size:48px;
+ background:radial-gradient(circle at 30% 20%,#255d85,#191a43 75%);
+ box-shadow:0 0 45px #39d9ed25;animation:float 3s ease-in-out infinite;
+}
+.auth-art h2{font-size:27px;letter-spacing:-.8px}
+.auth-art p{font-size:12px;line-height:1.9;color:var(--muted);margin-top:9px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#172034;border-color:#b4c8e5}
+.google-icon{width:19px;height:19px}
+.note{text-align:center;font-size:10px;line-height:1.8;color:#7183a3;margin:17px 5px}
+.hidden{display:none!important}
+@keyframes float{50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="topbar">
+ <div class="brand">
+  <div class="logo">✦</div>
+  <div><h1>SMART FUTURE</h1><p>REWARDS SYSTEM</p></div>
+ </div>
+ <button id="logoutBtn" class="btn logout hidden">Logout ↗</button>
+</header>
+
+<section id="authScreen">
+ <div class="auth-art">
+  <div class="orb">✧</div>
+  <h2>Earn. Collect. Redeem.</h2>
+  <p>Your futuristic rewards dashboard.<br>Sign in to access your wallet.</p>
+ </div>
+ <div class="card">
+  <div class="section-title">Welcome aboard</div>
+  <p class="section-sub" style="margin-bottom:18px">Continue securely with your Google account.</p>
+  <button id="loginBtn" class="btn btn-full google-btn">
+   <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/>
+    <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44z"/>
+    <path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6V15H5.9a20 20 0 0 0 0 18z"/>
+    <path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.9 15l6.9 5.2C14.4 15.5 18.8 12 24 12z"/>
+   </svg>
+   Continue with Google
+  </button>
+  <div id="authAlert" class="notice"></div>
+ </div>
+ <p class="note">Secure sign-in • Futuristic design • Mobile friendly</p>
+</section>
+
+<main id="mainScreen" class="hidden">
+ <section class="hero">
+  <div class="eyebrow">✦ YOUR DIGITAL WALLET</div>
+  <div class="balance"><span id="userCoins">0</span> <small>🪙</small></div>
+  <div class="inr">Demo estimate: ₹<span id="userINR">0.00</span></div>
+  <div class="hero-bottom">
+   <div><div class="mini-label">Account status</div><div class="mini-value">● Connected</div></div>
+   <div style="text-align:right"><div class="mini-label">Conversion estimate</div><div class="mini-value">10 coins = ₹1*</div></div>
+  </div>
+ </section>
+
+ <section class="stats">
+  <div class="stat"><div class="stat-icon">⚡</div><div class="stat-number" id="todayCoins">0</div><div class="stat-label">Coins claimed today</div></div>
+  <div class="stat"><div class="stat-icon">🎯</div><div class="stat-number" id="tasksDone">0</div><div class="stat-label">Tasks completed today</div></div>
+ </section>
+
+ <section class="card">
+  <div class="section-head">
+   <div><div class="section-title">Daily mission</div><div class="section-sub">Your progress, updated live</div></div>
+   <span class="tag">20 TASKS</span>
+  </div>
+  <div class="progress"><div id="dailyProgress"></div></div>
+  <div class="progress-row"><span id="progressText">0 of 20 tasks</span><span>Daily goal</span></div>
+ </section>
+
+ <section class="card">
+  <div class="section-head">
+   <div><div class="section-title">Captcha challenge</div><div class="section-sub">Enter the characters shown below</div></div>
+   <span class="tag">+5 COINS*</span>
+  </div>
+  <div class="captcha-wrap"><canvas id="captchaCanvas" width="280" height="88"></canvas></div>
+  <button id="refreshBtn" class="refresh">↻ Refresh challenge</button>
+  <input id="captchaInput" class="field" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="ENTER 5 CHARACTERS">
+  <button id="submitBtn" class="btn btn-primary btn-full" style="margin-top:12px">Verify challenge →</button>
+  <div id="timerBadge" class="timer">⏳ Please wait <span id="secondsLeft">15</span>s</div>
+  <div id="statusAlert" class="notice"></div>
+ </section>
+
+ <section class="card">
+  <div class="section-title">Redeem rewards</div>
+  <div class="section-sub">Minimum request: 500 coins (₹50 demo estimate*)</div>
+  <div class="divider"></div>
+  <input id="upiId" class="field" maxlength="120" autocomplete="off" placeholder="UPI ID / payment details">
+  <input id="withdrawCoinsInput" class="field" type="number" min="500" step="1" placeholder="Coins to redeem">
+  <button id="withdrawBtn" class="btn btn-primary btn-full" style="margin-top:13px">Submit redemption request →</button>
+  <div id="withdrawAlert" class="notice"></div>
+ </section>
+
+ <section class="card">
+  <div class="section-head">
+   <div><div class="section-title">Activity history</div><div class="section-sub">Recent redemption requests</div></div>
+   <span class="tag">LIVE</span>
+  </div>
+  <div id="historyList"><div class="empty">Loading activity...</div></div>
+ </section>
+
+ <p class="note">*Demo estimates only. This page does not send real payments. Production rewards require server-side validation, secure Firebase rules and verified payout funding.</p>
+</main>
+</div>
+
+<script>
+"use strict";
+
+const firebaseConfig = {
+ apiKey:"AIzaSyBDzcbfjXC9WOl3Kwz3779tR4EeYomd74k",
+ authDomain:"captchaearn-a679f.firebaseapp.com",
+ projectId:"captchaearn-a679f",
+ storageBucket:"captchaearn-a679f.firebasestorage.app",
+ messagingSenderId:"1090622823716",
+ appId:"1:1090622823716:web:02cda6f35f1055361b67b1",
+ measurementId:"G-PR6D0LTXV4"
+};
+
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+const $=id=>document.getElementById(id);
+
+const COINS_PER_TASK=5, MIN_WITHDRAW=500, DAILY_GOAL=20, COOLDOWN=15;
+let currentUser=null, captchaText="", currentCoins=0;
+let cooldown=false, busy=false, cooldownTimer=null;
+let userUnsubscribe=null, historyUnsubscribe=null;
+
+function notice(id,message,kind="error"){
+ const el=$(id);
+ el.textContent=message;
+ el.className="notice "+kind;
+ el.style.display="block";
+}
+function hideNotice(id){
+ $(id).style.display="none";
+ $(id).textContent="";
+}
+function errorMessage(err){
+ const messages={
+  "auth/popup-blocked":"Sign-in popup blocked. Please retry.",
+  "auth/unauthorized-domain":"Add your website domain in Firebase Authentication settings.",
+  "auth/operation-not-allowed":"Enable Google sign-in in Firebase Authentication.",
+  "auth/network-request-failed":"Network error. Check your internet.",
+  "permission-denied":"Firebase permissions denied this request. Check your security rules.",
+  "unavailable":"Service unavailable. Please retry."
+ };
+ return messages[err.code]||err.message||"Something went wrong.";
+}
+function setBusy(value){
+ busy=value;
+ $("loginBtn").disabled=value;
+ $("submitBtn").disabled=value||cooldown;
+ $("withdrawBtn").disabled=value;
+}
+
+async function login(){
+ hideNotice("authAlert");
+ try{
+  const provider=new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"});
+  await auth.signInWithRedirect(provider);
+ }catch(err){notice("authAlert",errorMessage(err));}
+}
+async function logout(){
+ try{await auth.signOut();}
+ catch(err){alert(errorMessage(err));}
+}
+function dateKey(){
+ const d=new Date();
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function makeCaptcha(){
+ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+ captchaText="";
+ const random=new Uint32Array(5);
+ if(window.crypto&&crypto.getRandomValues){
+  crypto.getRandomValues(random);
+  for(let i=0;i<5;i++)captchaText+=chars[random[i]%chars.length];
+ }else{
+  for(let i=0;i<5;i++)captchaText+=chars[Math.floor(Math.random()*chars.length)];
+ }
+ const canvas=$("captchaCanvas"),ctx=canvas.getContext("2d");
+ const grad=ctx.createLinearGradient(0,0,280,88);
+ grad.addColorStop(0,"#101b35");grad.addColorStop(1,"#252044");
+ ctx.fillStyle=grad;ctx.fillRect(0,0,280,88);
+ for(let i=0;i<16;i++){
+  ctx.strokeStyle=`rgba(83,232,255,${Math.random()*.4})`;
+  ctx.beginPath();
+  ctx.moveTo(Math.random()*280,Math.random()*88);
+  ctx.lineTo(Math.random()*280,Math.random()*88);
+  ctx.stroke();
+ }
+ for(let i=0;i<5;i++){
+  ctx.save();
+  ctx.translate(24+i*48,54);
+  ctx.rotate((Math.random()-.5)*.3);
+  ctx.font="bold 31px system-ui";
+  ctx.fillStyle=i%2?"#b7a0ff":"#53e8ff";
+  ctx.fillText(captchaText[i],0,0);
+  ctx.restore();
+ }
+ $("captchaInput").value="";
+}
+
+function updateWallet(data={}){
+ currentCoins=Number(data.coins)||0;
+ const tasks=data.demoDay===dateKey()?Number(data.demoTasks)||0:0;
+ $("userCoins").textContent=currentCoins.toLocaleString("en-IN");
+ $("userINR").textContent=(currentCoins/10).toFixed(2);
+ $("todayCoins").textContent=(tasks*COINS_PER_TASK).toLocaleString("en-IN");
+ $("tasksDone").textContent=tasks;
+ $("dailyProgress").style.width=Math.min(100,tasks/DAILY_GOAL*100)+"%";
+ $("progressText").textContent=Math.min(tasks,DAILY_GOAL)+" of "+DAILY_GOAL+" tasks";
+}
+
+function startCooldown(seconds){
+ clearInterval(cooldownTimer);
+ cooldown=true;
+ let left=seconds;
+ $("timerBadge").style.display="block";
+ $("secondsLeft").textContent=left;
+ $("submitBtn").disabled=true;
+ cooldownTimer=setInterval(()=>{
+  left--;
+  $("secondsLeft").textContent=Math.max(0,left);
+  if(left<=0){
+   clearInterval(cooldownTimer);
+   cooldown=false;
+   $("timerBadge").style.display="none";
+   $("submitBtn").disabled=busy;
+  }
+ },1000);
+}
+
+async function submitCaptcha(){
+ if(!currentUser||busy||cooldown)return;
+ hideNotice("statusAlert");
+ if(!$("captchaInput").value.trim()){
+  notice("statusAlert","Enter the CAPTCHA first.");return;
+ }
+ if($("captchaInput").value.trim().toUpperCase()!==captchaText){
+  notice("statusAlert","Incorrect challenge. Please try again.");
+  makeCaptcha();return;
+ }
+
+ setBusy(true);
+ try{
+  const ref=db.collection("users").doc(currentUser.uid);
+  const today=dateKey();
+  await db.runTransaction(async tx=>{
+   const snap=await tx.get(ref);
+   if(!snap.exists)throw new Error("Account profile not found.");
+   const data=snap.data();
+   const tasks=data.demoDay===today?Number(data.demoTasks)||0:0;
+   const last=Number(data.demoLastClaimMs)||0;
+   if(tasks>=DAILY_GOAL)throw new Error("Daily demo task limit reached.");
+   if(Date.now()-last<COOLDOWN*1000)throw new Error("Please wait before claiming again.");
+   tx.update(ref,{
+    coins:(Number(data.coins)||0)+COINS_PER_TASK,
+    demoDay:today,
+    demoTasks:tasks+1,
+    demoLastClaimMs:Date.now()
+   });
+  });
+  notice("statusAlert","Challenge accepted! Demo balance +5 coins.","success");
+  makeCaptcha();
+  startCooldown(COOLDOWN);
+ }catch(err){
+  notice("statusAlert",errorMessage(err));
+  makeCaptcha();
+ }finally{setBusy(false);}
+}
+
+function renderHistory(rows){
+ const list=$("historyList");
+ list.replaceChildren();
+ if(!rows.length){
+  const empty=document.createElement("div");
+  empty.className="empty";empty.textContent="No redemption requests yet.";
+  list.appendChild(empty);return;
+ }
+ rows.forEach(row=>{
+  const item=document.createElement("div");item.className="history-item";
+  const left=document.createElement("div");
+  const title=document.createElement("p");title.textContent="Redemption request";
+  const detail=document.createElement("small");detail.textContent=row.status+" · "+row.date;
+  left.append(title,detail);
+  const right=document.createElement("div");
+  right.className="amount "+(row.status==="Approved"?"paid":row.status==="Rejected"?"rejected":"pending");
+  right.textContent=row.coins+" coins";
+  item.append(left,right);list.appendChild(item);
+ });
+}
+
+function listenUser(user){
+ if(userUnsubscribe)userUnsubscribe();
+ userUnsubscribe=db.collection("users").doc(user.uid).onSnapshot(snap=>{
+  if(!snap.exists)return;
+  const data=snap.data();
+  updateWallet(data);
+  if(data.demoDay===dateKey()){
+   const remaining=Math.ceil(((Number(data.demoLastClaimMs)||0)+COOLDOWN*1000-Date.now())/1000);
+   if(remaining>0&&!cooldown)startCooldown(remaining);
+  }
+ },err=>notice("statusAlert",errorMessage(err)));
+}
+
+function listenHistory(user){
+ if(historyUnsubscribe)historyUnsubscribe();
+ historyUnsubscribe=db.collection("withdrawals")
+ .where("uid","==",user.uid).limit(30)
+ .onSnapshot(snap=>{
+  const rows=snap.docs.map(doc=>{
+   const d=doc.data();
+   const date=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleDateString():"Recently";
+   return {status:d.status||"Pending",coins:Number(d.coins)||0,date,time:d.createdAt&&d.createdAt.toMillis?d.createdAt.toMillis():0};
+  }).sort((a,b)=>b.time-a.time);
+  renderHistory(rows);
+ },err=>notice("withdrawAlert",errorMessage(err)));
+}
+
+async function requestWithdrawal(){
+ if(!currentUser||busy)return;
+ hideNotice("withdrawAlert");
+ const payment=$("upiId").value.trim();
+ const coins=Number($("withdrawCoinsInput").value);
+ if(!payment||payment.length>120){
+  notice("withdrawAlert","Enter valid payment details.");return;
+ }
+ if(!Number.isSafeInteger(coins)||coins<MIN_WITHDRAW){
+  notice("withdrawAlert","Minimum request is 500 coins.");return;
+ }
+
+ setBusy(true);
+ try{
+  const userRef=db.collection("users").doc(currentUser.uid);
+  const requestRef=db.collection("withdrawals").doc();
+
+  await db.runTransaction(async tx=>{
+   const snap=await tx.get(userRef);
+   if(!snap.exists)throw new Error("User profile not found.");
+   const data=snap.data(),balance=Number(data.coins)||0;
+   if(coins>balance)throw new Error("Insufficient balance.");
+   tx.update(userRef,{coins:balance-coins});
+   tx.set(requestRef,{
+    uid:currentUser.uid,
+    email:currentUser.email||"",
+    name:currentUser.displayName||"User",
+    upi:payment,coins,
+    amountINR:(coins/10).toFixed(2),
+    status:"Pending",
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+   });
+  });
+
+  $("upiId").value="";
+  $("withdrawCoinsInput").value="";
+  notice("withdrawAlert","Demo request saved. No money has been transferred.","success");
+ }catch(err){
+  notice
